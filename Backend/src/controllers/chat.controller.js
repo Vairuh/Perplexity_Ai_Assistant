@@ -3,41 +3,44 @@ import chatModel from "../models/chat.model.js";
 import messageModel from "../models/message.model.js";
 
 export async function sendMessage(req, res) {
-    const { message, chatId, chat: chatFromBody } = req.body;
-    const resolvedChatId = chatId || chatFromBody;
+    try {
+        const { message, chatId, chat: chatFromBody } = req.body;
+        const resolvedChatId = chatId || chatFromBody;
 
-    let title = null;
-    let chat = null;
+        let title = null;
+        let chat = null;
 
-    if (!resolvedChatId) {
-        title = await generateChatTitle(message);
-        chat = await chatModel.create({
-            user: req.user.id,
-            title,
+        if (!resolvedChatId) {
+            title = await generateChatTitle(message);
+            chat = await chatModel.create({
+                user: req.user.id,
+                title,
+            });
+        } else {
+            chat = await chatModel.findById(resolvedChatId);
+            if (!chat) return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        const messageDoc = await messageModel.create({
+            chat: chat._id,
+            content: message,
+            role: 'user',
         });
-    } else {
-        chat = await chatModel.findById(resolvedChatId);
-        if (!chat) return res.status(404).json({ error: 'Chat not found' });
+
+        const messages = await messageModel.find({ chat: chat._id });
+        const result = await generateResponse(messages);
+
+        await messageModel.create({
+            chat: chat._id,
+            content: result,
+            role: 'assistant',
+        });
+
+        res.json({ ai: result, title, chat, message: messageDoc });
+    } catch (error) {
+        console.error('sendMessage error:', error);
+        return res.status(500).json({ error: error.message || 'Failed to send message' });
     }
-
-    const messageDoc = await messageModel.create({
-        chat: chat._id,
-        content: message,
-        role: 'user',
-    });
-
-    const messages = await messageModel.find({ chat: chat._id });
-    const result = await generateResponse(messages);
-
-    await messageModel.create({
-        chat: chat._id,
-        content: result,
-        role: 'assistant',
-    });
-
-    console.log('Messages in chat:', messages);
-
-    res.json({ ai: result, title, chat, message: messageDoc });
 }
 
 export async function getChats(req, res) {

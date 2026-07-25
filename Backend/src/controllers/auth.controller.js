@@ -35,16 +35,22 @@ export async function register(req, res) {
         email: user.email,
     }, process.env.JWT_SECRET);
 
-    await sendEmail({
-        to: email,
-        subject: "Welcome to Perplexity!",
-        html: `<h1>Welcome to Perplexity, ${username}!</h1><p>Thank you for registering. We're excited to have you on board!</p>
-               <p>Best regards,<br/>The Perplexity Team</p>
-               <p>>To verify your email address, please click the link below:</p>
-                <a href="http://localhost:3000/api/auth/verify-email?token=${emailverificationToken}">Verify Email</a>
-                <p>>If you have any questions or need assistance, feel free to contact our support team.</p>`,
-        text: `Welcome to Perplexity, ${username}! Thank you for registering. We're excited to have you on board! Best regards, The Perplexity Team. If you have any questions or need assistance, feel free to contact our support team.`
-    });
+    try {
+        await sendEmail({
+            to: email,
+            subject: "Welcome to Perplexity!",
+            html: `<h1>Welcome to Perplexity, ${username}!</h1><p>Thank you for registering. We're excited to have you on board!</p>
+                   <p>Best regards,<br/>The Perplexity Team</p>
+                   <p>To verify your email address, please click the link below:</p>
+                    <a href="http://localhost:3000/api/auth/verify-email?token=${emailverificationToken}">Verify Email</a>
+                    <p>If you have any questions or need assistance, feel free to contact our support team.</p>`,
+            text: `Welcome to Perplexity, ${username}! Thank you for registering. We're excited to have you on board! Best regards, The Perplexity Team. If you have any questions or need assistance, feel free to contact our support team.`
+        });
+    } catch (emailError) {
+        console.error("Failed to send verification email:", emailError.message);
+        // Registration still succeeds even if email fails
+    }
+
     res.status(201).json({
         message: "User registered successfully",
         success: true,
@@ -89,18 +95,23 @@ export async function login(req, res) {
         });
     }
 
-    const token = jwt.sign({   
+    const token = jwt.sign({
         id: user._id,
         username: user.username,
         email: user.email,
     }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
 
     res.status(200).json({
         message: "Login successful",
         success: true,
-        
+
         user: {
             id: user._id,
             username: user.username,
@@ -113,7 +124,7 @@ export async function getMe(req, res) {
     const userId = req.user.id;
 
     const user = await userModel.findById(userId).select("-password");
-    
+
     if (!user) {
         return res.status(404).json({
             message: "User not found",
@@ -153,7 +164,7 @@ export async function verifyEmail(req, res) {
         const html = `<h1>Email Verified</h1><p>Your email has been successfully verified. You can now log in to your account.</p>`;
 
         res.send(html);
-    } 
+    }
     catch (error) {
         return res.status(400).json({
             message: "Invalid token",

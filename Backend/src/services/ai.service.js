@@ -48,10 +48,14 @@ export async function generateResponse(messages) {
 }
 
 export async function generateChatTitle(message) {
-  const response = await mistralmodel.invoke([
-    new SystemMessage(`You are a helpful assistant that generates concise titles for chat conversations.
-       User will provide a message from a chat conversation, and you will generate a concise title for that conversation in 3 words or less. The title should capture the essence of the conversation and be relevant to the content of the message. Please provide only the title without any additional text or explanation.`),
-    new HumanMessage(`Generate a concise title for the following chat message: ${message}`)
-  ]);
-  return response.content;
+  try {
+    const response = await geminimodel.invoke([
+      new SystemMessage(`You are a helpful assistant that generates concise titles for chat conversations. Generate a title in 3 words or less for the chat message. Output ONLY the title without quotes or extra text.`),
+      new HumanMessage(`Generate a concise title for this message: ${message}`)
+    ]);
+    return response.content ? response.content.trim() : message.slice(0, 25);
+  } catch (error) {
+    console.error("Title generation error (using fallback):", error.message);
+    return message.slice(0, 25) || "New Chat";
+  }
 }
