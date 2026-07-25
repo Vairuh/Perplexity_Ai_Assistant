@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { useAuth } from './hook/useAuth';
+import { useSelector } from 'react-redux';
 
 const Register = () => {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
-  const [message, setMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const { handleregister } = useAuth();
+  const { loading, error } = useSelector((state) => state.auth);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -12,14 +16,11 @@ const Register = () => {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage(`Registering ${form.username}`);
-    console.log('Register submit', {
-      username: form.username,
-      email: form.email,
-      password: form.password,
-    });
+    setSuccessMessage('');
+    await handleregister({ email: form.email, username: form.username, password: form.password });
+    setSuccessMessage('Registration successful! Please check your email to verify your account.');
   };
 
   return (
@@ -101,11 +102,19 @@ const Register = () => {
                 />
               </div>
 
+              {error && (
+                <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400 border border-red-500/20">{error}</p>
+              )}
+              {successMessage && (
+                <p className="rounded-xl bg-green-500/10 px-4 py-3 text-sm text-green-400 border border-green-500/20">{successMessage}</p>
+              )}
+
               <button
                 type="submit"
-                className="w-full rounded-3xl bg-linear-to-r from-cyan-500 via-teal-500 to-emerald-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:-translate-y-0.5 hover:shadow-cyan-500/40"
+                disabled={loading}
+                className="w-full rounded-3xl bg-linear-to-r from-cyan-500 via-teal-500 to-emerald-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:-translate-y-0.5 hover:shadow-cyan-500/40 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
-                Register
+                {loading ? 'Registering...' : 'Register'}
               </button>
             </form>
           </section>

@@ -32,7 +32,11 @@ const chatSlice = createSlice({
         setChatMessages: (state, action) => {
             const { chatId, messages } = action.payload;
             if (state.chats[chatId]) {
-                state.chats[chatId].messages = messages;
+                // Map from MongoDB objects to simple {content, role}
+                state.chats[chatId].messages = messages.map(m => ({
+                    content: m.content,
+                    role: m.role,
+                }));
             }
         },
         setCurrentChat: (state, action) => {

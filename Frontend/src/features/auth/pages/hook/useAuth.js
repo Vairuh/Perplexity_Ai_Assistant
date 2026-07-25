@@ -7,6 +7,7 @@ export function useAuth() {
 
     async function handleregister({email, username, password}) {
         try {
+            dispatch(setError(null));
             dispatch(setLoading(true));
             const data = await register({email, username, password});
             dispatch(setUser(data.user));    
@@ -21,6 +22,7 @@ export function useAuth() {
 
     async function handlelogin({email, password}) {
         try {
+            dispatch(setError(null));
             dispatch(setLoading(true));
             const data = await login({email, password});
             dispatch(setUser(data.user));
@@ -35,12 +37,16 @@ export function useAuth() {
 
     async function handlegetMe() {
         try {
+            dispatch(setError(null));
             dispatch(setLoading(true));
             const data = await getMe();
             dispatch(setUser(data.user));
         }
         catch (error) {
-            dispatch(setError(error.response?.data?.message || 'Failed to fetch user details'));
+            // 401 just means no active session — not an error to display
+            if (error.response?.status !== 401) {
+                dispatch(setError(error.response?.data?.message || 'Failed to fetch user details'));
+            }
         }
         finally {
             dispatch(setLoading(false));

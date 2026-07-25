@@ -10,24 +10,19 @@ export const useChat = () => {
 
     async function handleSendMessage({ chatId, message }) {
         dispatch(setLoading(true));
-        const data = await sendMessage({ chatId, message });
-        const{ ai, chat} = data;
-        dispatch(createNewChat({
-            chatId: chat._id,
-            title: chat.title,
-        }));
-        dispatch(addNewMessage({
-            chatId: chat._id,
-            content: message,
-            role: "user",
-        }));
-        dispatch(addNewMessage({
-            chatId: chat._id,
-            content: ai,
-            role: "assistant",
-        }));
-        dispatch(setCurrentChat(chat._id));
-        dispatch(setLoading(false));
+        try {
+            const data = await sendMessage({ chatId, message });
+            const { ai, chat } = data;
+            dispatch(createNewChat({ chatId: chat._id, title: chat.title }));
+            dispatch(addNewMessage({ chatId: chat._id, content: message, role: 'user' }));
+            dispatch(addNewMessage({ chatId: chat._id, content: ai, role: 'assistant' }));
+            dispatch(setCurrentChat(chat._id));
+        } catch (error) {
+            dispatch(setError(error?.response?.data?.message || 'Failed to send message'));
+            throw error; // re-throw so Dashboard can clear the sending state
+        } finally {
+            dispatch(setLoading(false));
+        }
     }
 
     async function handleGetChats() {
@@ -35,12 +30,22 @@ export const useChat = () => {
         try {
             const data = await getChats();
             const { chats } = data;
-            dispatch(setChats(chats.reduce((acc, chat) => {
-                acc[chat._id] = { title: chat.title, messages: [], id: chat._id, lastUpdated: Date.now() };
+
+            const chatsMap = chats.reduce((acc, chat) => {
+                acc[chat._id] = { title: chat.title, messages: [], id: chat._id, lastUpdated: new Date(chat.updatedAt || chat.createdAt).getTime() || Date.now() };
                 return acc;
-            }, {})));
+            }, {});
+
+            dispatch(setChats(chatsMap));
+
+            // Return sorted list so Dashboard can auto-load the first chat's messages
+            const sorted = chats.sort((a, b) =>
+                new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+            );
+            return sorted;
         } catch (error) {
             dispatch(setError(error.message || 'Failed to load chats'));
+            return [];
         } finally {
             dispatch(setLoading(false));
         }

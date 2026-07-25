@@ -1,22 +1,20 @@
 import React, { useState } from 'react';
-import {useNavigate} from 'react-router';
 import { useAuth } from './hook/useAuth';
-import {useSelector} from 'react-redux';
-import {Navigate} from 'react-router';
+import { useSelector } from 'react-redux';
+import { Navigate } from 'react-router';
 
 const Login = () => {
   const [form, setForm] = useState({
     email: '',
     password: '',
   });
-  const [message, setMessage] = useState('');
-
+  const { error, loading } = useSelector(state => state.auth);
   const user = useSelector(state => state.auth.user);
-  const loading = useSelector(state => state.auth.loading);
 
   const { handlelogin } = useAuth();
 
-  const navigate = useNavigate();
+
+
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -28,14 +26,8 @@ const Login = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setMessage(`Logging in with ${form.email}`);
-    console.log('Login submit', {
-      email: form.email,
-      password: form.password,
-    });
-
     await handlelogin(form);
-    navigate('/');
+    // Only navigate if login succeeded (user will be set in Redux)
   };
 
   if(!loading && user) {
@@ -104,11 +96,16 @@ const Login = () => {
                 />
               </div>
 
+              {error && (
+                <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-400 border border-red-500/20">{error}</p>
+              )}
+
               <button
                 type="submit"
-                className="w-full rounded-3xl bg-linear-to-r from-cyan-500 via-teal-500 to-emerald-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:-translate-y-0.5 hover:shadow-cyan-500/40"
+                disabled={loading}
+                className="w-full rounded-3xl bg-linear-to-r from-cyan-500 via-teal-500 to-emerald-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:-translate-y-0.5 hover:shadow-cyan-500/40 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Login
+                {loading ? 'Signing in...' : 'Login'}
               </button>
             </form>
           </section>
