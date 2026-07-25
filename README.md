@@ -2,10 +2,13 @@
 
 A full-stack, web-connected AI chat application inspired by Perplexity. Instead of answering purely from a language model's training data, it uses a **LangChain agent** that can decide, mid-conversation, to search the live web for grounded, up-to-date answers.
 
+**🔗 [Live Demo](https://perplexity-ai-assistant-lake.vercel.app)**
+
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-000000?style=flat&logo=vercel&logoColor=white)](https://perplexity-ai-assistant-lake.vercel.app)
 
 ## 🚀 Features
 
@@ -43,6 +46,11 @@ A full-stack, web-connected AI chat application inspired by Perplexity. Instead 
 - Mistral AI (`@langchain/mistralai`) — fast chat-title generation
 - Tavily API — real-time web search tool the agent can call
 - Zod — schema validation for the agent's tool arguments
+
+**Deployment**
+- Frontend on Vercel
+- Backend on Render
+- Database on MongoDB Atlas
 
 ## ⚙️ How It Works
 
@@ -133,7 +141,6 @@ Visit `http://localhost:5173`. The backend runs on `http://localhost:3000`.
 - Stream agent responses token-by-token over the existing Socket.io connection instead of waiting for the full reply
 - Show source citations from Tavily search results alongside AI answers
 - Global keyboard shortcut for quick chat search/switching
-- Deploy with a managed MongoDB instance and environment-based CORS config
 
 ## 📄 License
 
