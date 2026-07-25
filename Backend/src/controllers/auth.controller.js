@@ -42,7 +42,7 @@ export async function register(req, res) {
             html: `<h1>Welcome to Perplexity, ${username}!</h1><p>Thank you for registering. We're excited to have you on board!</p>
                    <p>Best regards,<br/>The Perplexity Team</p>
                    <p>To verify your email address, please click the link below:</p>
-                    <a href="http://localhost:3000/api/auth/verify-email?token=${emailverificationToken}">Verify Email</a>
+                    <a href="${process.env.BACKEND_URL}/api/auth/verify-email?token=${emailverificationToken}">Verify Email</a>
                     <p>If you have any questions or need assistance, feel free to contact our support team.</p>`,
             text: `Welcome to Perplexity, ${username}! Thank you for registering. We're excited to have you on board! Best regards, The Perplexity Team. If you have any questions or need assistance, feel free to contact our support team.`
         });
